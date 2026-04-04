@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1069058058728",
+    "project_id": "cashbook-4b0ec",
+    "storage_bucket": "cashbook-4b0ec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069058058728:android:cc849f137bb8ab29e5dc5d",
+        "android_client_info": {
+          "package_name": "com.antigravity.cashbook_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqAGcQQtFTspRiBSGEi510jEbdFZfAHcA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
