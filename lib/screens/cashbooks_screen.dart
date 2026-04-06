@@ -9,6 +9,7 @@ import 'dashboard_screen.dart';
 import 'settings_screen.dart';
 import 'splash_screen.dart';
 import 'help_screen.dart';
+import '../utils/formatters.dart';
 
 class CashbooksScreen extends StatefulWidget {
   @override
@@ -383,7 +384,7 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '₹${book.cashIn.toStringAsFixed(0)}',
+                      formatCurrency(book.cashIn),
                       style: const TextStyle(
                         color: Colors.green,
                         fontWeight: FontWeight.bold,
@@ -391,7 +392,7 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                       ),
                     ),
                     Text(
-                      '₹${book.cashOut.toStringAsFixed(0)}',
+                      formatCurrency(book.cashOut),
                       style: const TextStyle(
                         color: Colors.red,
                         fontWeight: FontWeight.bold,

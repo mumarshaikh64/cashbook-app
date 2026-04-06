@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:provider/provider.dart';
 import '../models/transaction.dart';
+import '../providers/app_provider.dart';
 import '../services/report_service.dart';
 import 'report_success_screen.dart';
 
@@ -59,102 +61,111 @@ class _ReportScreenState extends State<ReportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Generate Report',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Color(0xFF6366F1)),
-            onPressed: () async {
-              final newSettings = await Navigator.push<Map<String, bool>>(
-                context,
-                MaterialPageRoute(builder: (_) => PdfSettingsScreen(initialSettings: _reportSettings)),
-              );
-              if (newSettings != null) {
-                setState(() => _reportSettings = newSettings);
-              }
-            },
+    return Consumer<AppProvider>(
+      builder: (context, appProvider, child) {
+        return Scaffold(
+          backgroundColor: const Color(0xFFF8FAFC),
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: const Text(
+              'Generate Report',
+              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings_outlined, color: Color(0xFF6366F1)),
+                onPressed: () async {
+                  final newSettings = await Navigator.push<Map<String, bool>>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PdfSettingsScreen(
+                        initialSettings: _reportSettings,
+                        appProvider: appProvider,
+                      ),
+                    ),
+                  );
+                  if (newSettings != null) {
+                    setState(() => _reportSettings = newSettings);
+                  }
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          _buildShareBanner(),
-          _buildReportSummary(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-            child: Row(
-              children: [
-                Text(
-                  'Select Report Type',
-                  style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.bold, fontSize: 16),
+          body: Column(
+            children: [
+              _buildShareBanner(),
+              _buildReportSummary(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                child: Row(
+                  children: [
+                    Text(
+                      'Select Report Type',
+                      style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _reportTypes.length,
-              itemBuilder: (context, index) {
-                final type = _reportTypes[index];
-                final isSelected = _selectedReportType == type['title'];
-                
-                return FadeInUp(
-                  delay: Duration(milliseconds: index * 50),
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected ? const Color(0xFF6366F1) : Colors.transparent,
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: _reportTypes.length,
+                  itemBuilder: (context, index) {
+                    final type = _reportTypes[index];
+                    final isSelected = _selectedReportType == type['title'];
+                    
+                    return FadeInUp(
+                      delay: Duration(milliseconds: index * 50),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected ? const Color(0xFF6366F1) : Colors.transparent,
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: RadioListTile<String>(
-                      value: type['title']!,
-                      groupValue: _selectedReportType,
-                      onChanged: (val) => setState(() => _selectedReportType = val!),
-                      activeColor: const Color(0xFF6366F1),
-                      title: Text(
-                        type['title']!,
-                        style: TextStyle(
-                          color: isSelected ? const Color(0xFF4338CA) : Colors.black,
-                          fontWeight: FontWeight.bold,
+                        child: RadioListTile<String>(
+                          value: type['title']!,
+                          groupValue: _selectedReportType,
+                          onChanged: (val) => setState(() => _selectedReportType = val!),
+                          activeColor: const Color(0xFF6366F1),
+                          title: Text(
+                            type['title']!,
+                            style: TextStyle(
+                              color: isSelected ? const Color(0xFF4338CA) : Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Text(
+                            type['subtitle']!,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                         ),
                       ),
-                      subtitle: Text(
-                        type['subtitle']!,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
+              ),
+              _buildActionButtons(appProvider),
+            ],
           ),
-          _buildActionButtons(),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -242,7 +253,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(AppProvider appProvider) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -260,17 +271,20 @@ class _ReportScreenState extends State<ReportScreen> {
                 bookName: widget.bookName,
                 settings: _reportSettings,
                 reportType: _selectedReportType,
+                businessName: appProvider.businessName,
               );
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ReportSuccessScreen(
-                    filePath: path,
-                    bookName: widget.bookName,
-                    reportType: _selectedReportType,
+              if (mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ReportSuccessScreen(
+                      filePath: path,
+                      bookName: widget.bookName,
+                      reportType: _selectedReportType,
+                    ),
                   ),
-                ),
-              );
+                );
+              }
             },
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 50),
@@ -288,17 +302,21 @@ class _ReportScreenState extends State<ReportScreen> {
                 bookName: widget.bookName,
                 settings: _reportSettings,
                 reportType: _selectedReportType,
+                businessName: appProvider.businessName,
+                logoPath: appProvider.logoPath,
               );
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ReportSuccessScreen(
-                    filePath: path,
-                    bookName: widget.bookName,
-                    reportType: _selectedReportType,
+              if (mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ReportSuccessScreen(
+                      filePath: path,
+                      bookName: widget.bookName,
+                      reportType: _selectedReportType,
+                    ),
                   ),
-                ),
-              );
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6366F1),
@@ -318,7 +336,8 @@ class _ReportScreenState extends State<ReportScreen> {
 
 class PdfSettingsScreen extends StatefulWidget {
   final Map<String, bool> initialSettings;
-  const PdfSettingsScreen({required this.initialSettings, super.key});
+  final AppProvider appProvider;
+  const PdfSettingsScreen({required this.initialSettings, required this.appProvider, super.key});
 
   @override
   _PdfSettingsScreenState createState() => _PdfSettingsScreenState();
@@ -354,7 +373,7 @@ class _PdfSettingsScreenState extends State<PdfSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildBusinessIdentity(),
+            _buildBusinessIdentity(widget.appProvider),
             const Padding(
               padding: EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
@@ -379,7 +398,7 @@ class _PdfSettingsScreenState extends State<PdfSettingsScreen> {
     );
   }
 
-  Widget _buildBusinessIdentity() {
+  Widget _buildBusinessIdentity(AppProvider appProvider) {
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.white,
@@ -400,14 +419,21 @@ class _PdfSettingsScreenState extends State<PdfSettingsScreen> {
                 Container(
                   width: 40,
                   height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2FF),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.business, color: Color(0xFF6366F1)),
+                  margin: const EdgeInsets.only(right: 12),
+                  child: appProvider.logoPath != null && File(appProvider.logoPath!).existsSync()
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(File(appProvider.logoPath!), fit: BoxFit.cover),
+                      )
+                    : Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF2FF),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.business, color: Color(0xFF6366F1)),
+                      ),
                 ),
-                const SizedBox(width: 12),
-                const Text('Softgrid Solutions', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(appProvider.businessName ?? 'MY BUSINESS', style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
           ),

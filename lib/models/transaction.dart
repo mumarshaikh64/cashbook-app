@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../utils/formatters.dart';
 
@@ -5,7 +6,7 @@ enum TransactionType { cashIn, cashOut }
 
 class TransactionModel {
   final int? id;
-  final int bookId; // Associated Book ID
+  final int bookId; 
   final String title;
   final double amount;
   final DateTime date;
@@ -13,7 +14,10 @@ class TransactionModel {
   final String category;
   final String? note;
   final String? attachmentPath;
-  final String? partyName; // Who gave or who was given to
+  final String? partyName; 
+  final String paymentMode;
+  final String? reference;
+  final Map<String, String>? customFields; // Dynamic custom fields
   final int isSynced;
 
   TransactionModel({
@@ -27,6 +31,9 @@ class TransactionModel {
     this.note,
     this.attachmentPath,
     this.partyName,
+    this.paymentMode = 'Cash',
+    this.reference,
+    this.customFields,
     this.isSynced = 0,
   });
 
@@ -42,11 +49,24 @@ class TransactionModel {
       'note': note,
       'attachmentPath': attachmentPath,
       'partyName': partyName,
+      'paymentMode': paymentMode,
+      'reference': reference,
+      'customFields': customFields != null ? jsonEncode(customFields) : null,
       'isSynced': isSynced,
     };
   }
 
   factory TransactionModel.fromMap(Map<String, dynamic> map) {
+    Map<String, String>? decodedFields;
+    if (map['customFields'] != null && map['customFields'] is String) {
+      try {
+        final decoded = jsonDecode(map['customFields']);
+        if (decoded is Map) {
+          decodedFields = decoded.map((key, value) => MapEntry(key.toString(), value.toString()));
+        }
+      } catch (_) {}
+    }
+
     return TransactionModel(
       id: map['id'],
       bookId: map['bookId'] ?? 0,
@@ -58,6 +78,9 @@ class TransactionModel {
       note: map['note'],
       attachmentPath: map['attachmentPath'],
       partyName: map['partyName'],
+      paymentMode: map['paymentMode'] ?? 'Cash',
+      reference: map['reference'],
+      customFields: decodedFields,
       isSynced: map['isSynced'] ?? 0,
     );
   }

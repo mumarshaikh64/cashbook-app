@@ -50,7 +50,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 5,
+      version: 7,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -88,6 +88,17 @@ class DatabaseHelper {
         }
       } catch (e) {}
     }
+    if (oldVersion < 6) {
+      try {
+        await db.execute('ALTER TABLE transactions ADD COLUMN paymentMode TEXT NOT NULL DEFAULT "Cash"');
+        await db.execute('ALTER TABLE transactions ADD COLUMN reference TEXT');
+      } catch (e) {}
+    }
+    if (oldVersion < 7) {
+      try {
+        await db.execute('ALTER TABLE transactions ADD COLUMN customFields TEXT');
+      } catch (e) {}
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -112,6 +123,9 @@ class DatabaseHelper {
         note TEXT,
         attachmentPath TEXT,
         partyName TEXT,
+        paymentMode TEXT NOT NULL DEFAULT 'Cash',
+        reference TEXT,
+        customFields TEXT,
         isSynced INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (bookId) REFERENCES books (id) ON DELETE CASCADE
       )

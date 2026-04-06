@@ -50,19 +50,44 @@ class TransactionCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    transaction.title, 
+                    transaction.title.isNotEmpty ? transaction.title : 'Entry', 
                     style: const TextStyle(
                       fontWeight: FontWeight.bold, 
-                      fontSize: 16,
+                      fontSize: 15,
                       color: Color(0xFF1F2937)
                     )
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          transaction.category,
+                          style: TextStyle(color: Colors.grey[600], fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (transaction.note != null && transaction.note!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      transaction.note!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.grey[400], fontSize: 11),
+                    ),
+                  ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
                       Text(
                         transaction.formattedDate, 
-                        style: TextStyle(color: Colors.grey[400], fontSize: 12)
+                        style: TextStyle(color: Colors.grey[400], fontSize: 11)
                       ),
                       if (transaction.isSynced == 1) ...[
                         const SizedBox(width: 8),
@@ -70,6 +95,15 @@ class TransactionCard extends StatelessWidget {
                       ],
                     ],
                   ),
+                  if (transaction.customFields != null && transaction.customFields!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      transaction.customFields!.entries.take(2).map((e) => '${e.key}: ${e.value}').join('  •  '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.grey[500], fontSize: 10, fontWeight: FontWeight.w500),
+                    ),
+                  ],
                 ],
               ),
             ),

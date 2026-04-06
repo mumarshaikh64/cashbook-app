@@ -1,15 +1,20 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'google_drive_service.dart';
 
 class SyncService {
   final GoogleDriveService _googleDriveService = GoogleDriveService();
 
   Future<void> autoBackupIfConnected() async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult != ConnectivityResult.none) {
-      if (await _googleDriveService.isSignedIn()) {
-        await _googleDriveService.backupDatabase();
+    try {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult.isNotEmpty && connectivityResult.first != ConnectivityResult.none) {
+        if (await _googleDriveService.isSignedIn()) {
+          await _googleDriveService.backupDatabase();
+        }
       }
+    } catch (e) {
+      debugPrint('AutoBackup Error: $e');
     }
   }
 

@@ -102,18 +102,16 @@ class TransactionProvider with ChangeNotifier {
 
   Future<void> addTransaction(TransactionModel transaction) async {
     await DatabaseHelper.instance.insertTransaction(transaction);
-    await fetchTransactions();
-    await fetchParties(); // Refresh parties list
+    await fetchBooks(); // Refresh everything to ensure Book List totals are updated
   }
 
   Future<void> updateTransaction(TransactionModel transaction) async {
     await DatabaseHelper.instance.updateTransaction(transaction);
-    await fetchTransactions();
-    await fetchParties();
+    await fetchBooks();
   }
 
   Future<void> deleteTransaction(int id) async {
     await DatabaseHelper.instance.deleteTransaction(id);
-    await fetchTransactions();
+    await fetchBooks();
   }
 }

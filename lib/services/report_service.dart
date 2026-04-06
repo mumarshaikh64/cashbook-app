@@ -6,6 +6,7 @@ import 'package:syncfusion_flutter_xlsio/xlsio.dart' as xls;
 import 'package:share_plus/share_plus.dart';
 import 'package:open_filex/open_filex.dart';
 import '../models/transaction.dart';
+import '../utils/formatters.dart';
 import 'package:intl/intl.dart';
 
 class ReportRow {
@@ -39,7 +40,7 @@ class ReportService {
       } else if (reportType == 'Category-wise summary') {
         key = t.category;
       } else if (reportType == 'Payment Modes summary') {
-        key = 'Cash'; // Default mode
+        key = t.paymentMode; 
       }
 
       groups.putIfAbsent(key, () => []).add(t);
@@ -68,6 +69,8 @@ class ReportService {
     required String bookName,
     required Map<String, bool> settings,
     required String reportType,
+    String? businessName,
+    String? logoPath,
   }) async {
     final pdf = pw.Document();
     final isDetail = reportType == 'All Entries Report';
@@ -104,15 +107,15 @@ class ReportService {
         if (settings['Remark'] ?? true) row.add(t.note ?? '-');
         if (settings['Category'] ?? true) row.add(t.category);
         if (settings['Party Name'] ?? true) row.add(t.partyName ?? '-');
-        if (settings['Cash In'] ?? true) row.add(t.type == TransactionType.cashIn ? t.amount.toStringAsFixed(2) : '');
-        if (settings['Cash Out'] ?? true) row.add(t.type == TransactionType.cashOut ? t.amount.toStringAsFixed(2) : '');
-        if (settings['Balance'] ?? true) row.add(bal.toStringAsFixed(2));
+        if (settings['Cash In'] ?? true) row.add(t.type == TransactionType.cashIn ? formatCurrency(t.amount) : '');
+        if (settings['Cash Out'] ?? true) row.add(t.type == TransactionType.cashOut ? formatCurrency(t.amount) : '');
+        if (settings['Balance'] ?? true) row.add(formatCurrency(bal));
         rowData.add(row);
       }
     } else {
       final grouped = _getGroupedData(transactions, reportType);
       for (var r in grouped) {
-        rowData.add([r.label, r.cashIn.toStringAsFixed(2), r.cashOut.toStringAsFixed(2), r.balance.toStringAsFixed(2)]);
+        rowData.add([r.label, formatCurrency(r.cashIn), formatCurrency(r.cashOut), formatCurrency(r.balance)]);
       }
     }
 
@@ -124,24 +127,50 @@ class ReportService {
           children: [
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text(bookName.toUpperCase(), style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo)),
-                    pw.Text(reportType, style: pw.TextStyle(fontSize: 12, color: PdfColors.grey)),
-                  ],
+                pw.Expanded(
+                  child: pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      if (logoPath != null && File(logoPath).existsSync())
+                        pw.Container(
+                          width: 45,
+                          height: 45,
+                          margin: const pw.EdgeInsets.only(right: 12),
+                          child: pw.Image(pw.MemoryImage(File(logoPath).readAsBytesSync()), fit: pw.BoxFit.contain),
+                        )
+                      else
+                        pw.Container(
+                          width: 45,
+                          height: 45,
+                          margin: const pw.EdgeInsets.only(right: 12),
+                          decoration: const pw.BoxDecoration(color: PdfColors.indigo, borderRadius: pw.BorderRadius.all(pw.Radius.circular(8))),
+                          alignment: pw.Alignment.center,
+                          child: pw.Text((businessName ?? bookName)[0].toUpperCase(), style: pw.TextStyle(color: PdfColors.white, fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                        ),
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text((businessName ?? 'MY BUSINESS').toUpperCase(), style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo900)),
+                          pw.Text(bookName, style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo)),
+                          pw.Text(reportType, style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.end,
                   children: [
-                    pw.Text('Report Generated On', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
+                    pw.Text('Report Generated On', style: pw.TextStyle(fontSize: 9, color: PdfColors.grey)),
                     pw.Text(DateFormat('dd MMM yyyy, HH:mm').format(DateTime.now()), style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
                   ],
                 ),
               ],
             ),
-            pw.Divider(thickness: 1, color: PdfColors.grey, indent: 0, endIndent: 0),
+            pw.SizedBox(height: 8),
+            pw.Divider(thickness: 1, color: PdfColors.grey300),
             pw.SizedBox(height: 10),
           ],
         ),
@@ -151,7 +180,7 @@ class ReportService {
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text('Generated by Cashbook App', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey)),
+                pw.Text('Powered by Softgrid Solutions', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey)),
                 pw.Text('Page ${context.pageNumber} of ${context.pagesCount}', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey)),
               ],
             ),
@@ -199,14 +228,164 @@ class ReportService {
     return file.path;
   }
 
-  static pw.Widget _buildPdfSummaryItem(String label, double value, PdfColor color) {
-    return pw.Column(
-      children: [
-        pw.Text(label, style: pw.TextStyle(fontSize: 8, color: PdfColors.grey)),
-        pw.SizedBox(height: 4),
-        pw.Text(value.toStringAsFixed(2), style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: color)),
-      ],
+  static Future<String> generateSingleTransactionPdf({
+    required TransactionModel transaction,
+    String? businessName,
+    String? logoPath,
+  }) async {
+    final pdf = pw.Document();
+    final isCashIn = transaction.type == TransactionType.cashIn;
+    final primaryColor = isCashIn ? PdfColors.green700 : PdfColors.red700;
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: const PdfPageFormat(400, 500, marginAll: 0),
+        build: (context) => pw.Container(
+          padding: const pw.EdgeInsets.all(20),
+          color: PdfColors.white,
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Blue Top Border (from image)
+              pw.Container(
+                height: 10,
+                width: double.infinity,
+                decoration: const pw.BoxDecoration(
+                  color: PdfColors.indigo,
+                  borderRadius: pw.BorderRadius.vertical(top: pw.Radius.circular(10)),
+                ),
+              ),
+              pw.SizedBox(height: 15),
+
+              // Title Section
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Bill', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.black)),
+                  pw.Text('Bill Date: ${DateFormat('dd MMM yyyy').format(transaction.date)}', style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                ],
+              ),
+              pw.SizedBox(height: 10),
+              pw.Divider(thickness: 1, color: PdfColors.grey100),
+              pw.SizedBox(height: 20),
+
+              // Payment Mode
+              pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text('Mode', style: pw.TextStyle(fontSize: 12, color: PdfColors.grey500)),
+                    pw.Text(transaction.paymentMode, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 30),
+
+              // Table Header
+              pw.Container(
+                padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: const pw.BoxDecoration(color: PdfColors.grey100),
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('Details', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700)),
+                    pw.Text('Amount', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700)),
+                  ],
+                ),
+              ),
+
+              // Table Body
+              pw.Container(
+                padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(transaction.partyName ?? 'General Entry', style: pw.TextStyle(fontSize: 16, color: PdfColors.black)),
+                        if (transaction.note != null && transaction.note!.isNotEmpty)
+                          pw.Text(transaction.note!, style: pw.TextStyle(fontSize: 10, color: PdfColors.grey500)),
+                      ],
+                    ),
+                    pw.Text(
+                      '${isCashIn ? '+' : '-'} ${formatCurrency(transaction.amount)}'.replaceAll('RS.', '').trim(), 
+                      style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: primaryColor)
+                    ),
+                  ],
+                ),
+              ),
+              pw.Divider(thickness: 1, color: PdfColors.grey100),
+
+              // Custom Fields if any
+              if (transaction.customFields != null && transaction.customFields!.isNotEmpty) ...[
+                pw.SizedBox(height: 10),
+                ...transaction.customFields!.entries.map((e) => pw.Padding(
+                  padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Text(e.key, style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                      pw.Text(e.value, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                    ],
+                  ),
+                )).toList(),
+              ],
+
+              pw.Spacer(),
+
+              // Footer (from image)
+              pw.Center(
+                child: pw.Column(
+                  children: [
+                    pw.Text('Created by', style: pw.TextStyle(fontSize: 12, color: PdfColors.grey600)),
+                    pw.SizedBox(height: 5),
+                    
+                    // App Branding (CASHBOOK Logo Style)
+                    pw.Container(
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: pw.BoxDecoration(
+                        border: pw.Border.all(color: PdfColors.blue, width: 1),
+                        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                      ),
+                      child: pw.Row(
+                        mainAxisSize: pw.MainAxisSize.min,
+                        children: [
+                          pw.Container(
+                            width: 20, height: 20,
+                            decoration: const pw.BoxDecoration(color: PdfColors.blue, shape: pw.BoxShape.circle),
+                            alignment: pw.Alignment.center,
+                            child: pw.Text('C', style: pw.TextStyle(color: PdfColors.white, fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                          ),
+                          pw.SizedBox(width: 5),
+                          pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Text('CASHBOOK', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
+                              pw.Text('Easy to Use | 100% Safe', style: pw.TextStyle(fontSize: 6, color: PdfColors.blue700)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    pw.SizedBox(height: 10),
+                    pw.Text('Powered by Softgrid Solutions', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700)),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
     );
+
+    final dir = await getTemporaryDirectory();
+    final fileName = 'Receipt_${transaction.id}_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf';
+    final file = File('${dir.path}/$fileName');
+    await file.writeAsBytes(await pdf.save());
+    return file.path;
   }
 
   static Future<String> generateExcel({
@@ -214,18 +393,19 @@ class ReportService {
     required String bookName,
     required Map<String, bool> settings,
     required String reportType,
+    String? businessName,
   }) async {
     final xls.Workbook workbook = xls.Workbook();
     final xls.Worksheet sheet = workbook.worksheets[0];
     final isDetail = reportType == 'All Entries Report';
 
     // Set Title
-    sheet.getRangeByName('A1').setText(bookName.toUpperCase());
+    sheet.getRangeByName('A1').setText((businessName ?? bookName).toUpperCase());
     sheet.getRangeByName('A1').cellStyle.fontSize = 16;
     sheet.getRangeByName('A1').cellStyle.bold = true;
     sheet.getRangeByName('A1').cellStyle.fontColor = '#1E1B4B'; // Indigo 900
 
-    sheet.getRangeByName('A2').setText(reportType);
+    sheet.getRangeByName('A2').setText("$bookName - $reportType");
     sheet.getRangeByName('A2').cellStyle.fontSize = 12;
     sheet.getRangeByName('A2').cellStyle.fontColor = '#4B5563'; // Grey 600
 
@@ -279,7 +459,7 @@ class ReportService {
 
     // Auto-fit columns
     for (int i = 1; i <= headers.length; i++) {
-      sheet.autoFitColumn(i);
+        sheet.autoFitColumn(i);
     }
 
     final List<int> bytes = workbook.saveAsStream();
@@ -291,11 +471,23 @@ class ReportService {
     return file.path;
   }
 
-  static Future<void> shareFile(String path) async {
-    await Share.shareXFiles([XFile(path)], text: 'Exported Ledger');
+  static Future<void> shareFile(String path, {String text = 'Exported Ledger'}) async {
+    if (File(path).existsSync()) {
+      await Share.shareXFiles([XFile(path)], text: text);
+    }
   }
 
   static Future<void> openFile(String path) async {
     await OpenFilex.open(path);
+  }
+
+  static pw.Widget _buildPdfSummaryItem(String label, double value, PdfColor color) {
+    return pw.Column(
+      children: [
+        pw.Text(label, style: pw.TextStyle(fontSize: 8, color: PdfColors.grey)),
+        pw.SizedBox(height: 4),
+        pw.Text(formatCurrency(value), style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: color)),
+      ],
+    );
   }
 }

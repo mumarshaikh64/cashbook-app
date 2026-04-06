@@ -58,15 +58,29 @@ class GoogleDriveService {
   }
 
   Future<bool> isSignedIn() async {
-    return _auth.currentUser != null;
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) return false;
+
+    // Try to silently sign in to Google if session is lost
+    if (_googleSignIn.currentUser == null) {
+      try {
+        await _googleSignIn.signInSilently();
+      } catch (e) {
+        print('SignIn Silently Error: $e');
+        return false;
+      }
+    }
+    
+    return _googleSignIn.currentUser != null;
   }
 
   Future<Map<String, String?>> getAccountInfo() async {
     final prefs = await SharedPreferences.getInstance();
+    final user = _auth.currentUser;
     return {
-      'email': prefs.getString('googleEmail'),
-      'name': prefs.getString('googleDisplayName'),
-      'photo': prefs.getString('googlePhotoUrl'),
+      'email': user?.email ?? prefs.getString('googleEmail'),
+      'name': user?.displayName ?? prefs.getString('googleDisplayName'),
+      'photo': user?.photoURL ?? prefs.getString('googlePhotoUrl'),
       'lastBackup': prefs.getString('lastBackupTime'),
     };
   }
