@@ -10,6 +10,7 @@ import 'settings_screen.dart';
 import 'splash_screen.dart';
 import 'help_screen.dart';
 import '../utils/formatters.dart';
+import '../widgets/custom_modals.dart';
 
 class CashbooksScreen extends StatefulWidget {
   @override
@@ -485,58 +486,186 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
 
   void _showRenameDialog(int bookId, String currentName) {
     final controller = TextEditingController(text: currentName);
-    showDialog(
+    CustomModals.showPremiumBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Rename Book'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(border: OutlineInputBorder()),
+      title: 'Rename Book',
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Update your cashbook name below.',
+              style: TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: 'New Book Name',
+                filled: true,
+                fillColor: Colors.grey[50],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (controller.text.isNotEmpty) {
+                    await context.read<TransactionProvider>().renameBook(
+                          bookId,
+                          controller.text,
+                        );
+                    Navigator.pop(context);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: const Text(
+                  'UPDATE NAME',
+                  style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CANCEL'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (controller.text.isNotEmpty) {
-                await context.read<TransactionProvider>().renameBook(
-                  bookId,
-                  controller.text,
-                );
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('SAVE'),
-          ),
-        ],
       ),
     );
   }
 
   void _confirmDelete(int bookId, String bookName) {
-    showDialog(
+    final TextEditingController deleteController = TextEditingController();
+    bool isMatch = false;
+
+    CustomModals.showPremiumBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Book?'),
-        content: Text(
-          'Are you sure you want to delete "$bookName"? All transactions will be lost.',
+      title: 'Delete Book',
+      child: StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEBEE),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.red[100]!),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.warning_amber_rounded,
+                        color: Color(0xFFD32F2F), size: 24),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'This action is permanent and will delete all entries in this book.',
+                        style: TextStyle(
+                          color: Color(0xFFB71C1C),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              RichText(
+                text: TextSpan(
+                  style: const TextStyle(
+                      color: Colors.black87, fontSize: 14, height: 1.5),
+                  children: [
+                    const TextSpan(text: 'To confirm, please type '),
+                    TextSpan(
+                      text: bookName,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFEF4444)),
+                    ),
+                    const TextSpan(text: ' below.'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: deleteController,
+                autofocus: true,
+                onChanged: (value) {
+                  setModalState(() {
+                    isMatch = value == bookName;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Enter book name',
+                  filled: true,
+                  fillColor: Colors.grey[50],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: Color(0xFFEF4444), width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: isMatch
+                      ? () {
+                          context.read<TransactionProvider>().deleteBook(bookId);
+                          Navigator.pop(context);
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEF4444),
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey[200],
+                    disabledForegroundColor: Colors.grey[400],
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text(
+                    'DELETE PERMANENTLY',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CANCEL'),
-          ),
-          TextButton(
-            onPressed: () {
-              context.read<TransactionProvider>().deleteBook(bookId);
-              Navigator.pop(context);
-            },
-            child: const Text('DELETE', style: TextStyle(color: Colors.red)),
-          ),
-        ],
       ),
     );
   }
@@ -682,60 +811,71 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
 
   void _showAddBookDialog() {
     final controller = TextEditingController();
-    showModalBottomSheet(
+    CustomModals.showPremiumBottomSheet(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 16,
-          right: 16,
-          top: 16,
-        ),
+      title: 'Add New Book',
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                const Text(
-                  'Add New Book',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
+            const Text(
+              'Give your cashbook a name to get started.',
+              style: TextStyle(color: Colors.grey, fontSize: 14),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Enter Book Name',
-                border: OutlineInputBorder(),
-              ),
               autofocus: true,
+              decoration: InputDecoration(
+                labelText: 'Book Name',
+                hintText: 'e.g. My General Store',
+                filled: true,
+                fillColor: Colors.grey[50],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF6366F1), width: 2),
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
+              height: 55,
               child: ElevatedButton(
                 onPressed: () {
                   if (controller.text.isNotEmpty) {
                     context.read<TransactionProvider>().createBook(
-                      controller.text,
-                    );
+                          controller.text,
+                        );
                     Navigator.pop(context);
                   }
                 },
-                child: const Text('ADD NEW BOOK'),
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: const Text(
+                  'CREATE CASHBOOK',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
           ],
         ),
       ),

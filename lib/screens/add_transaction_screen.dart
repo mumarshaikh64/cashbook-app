@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
+import '../widgets/custom_modals.dart';
 
 class CustomFieldController {
   final TextEditingController label;
@@ -114,10 +115,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       bool available = await _speech.initialize();
       if (available) {
         setState(() => _isListening = true);
+        final String currentText = _remarkController.text;
         _speech.listen(
           onResult: (val) {
             setState(() {
-              _remarkController.text = val.recognizedWords;
+              if (currentText.isEmpty) {
+                _remarkController.text = val.recognizedWords;
+              } else {
+                _remarkController.text = '$currentText ${val.recognizedWords}';
+              }
             });
           },
         );
@@ -129,64 +135,86 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   void _showPartyPicker(TextEditingController autocompleteController) {
-    showModalBottomSheet(
+    CustomModals.showPremiumBottomSheet(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Consumer<TransactionProvider>(
-        builder: (context, provider, child) => Container(
-          padding: const EdgeInsets.all(20),
-          height: MediaQuery.of(context).size.height * 0.7,
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      title: 'Select Party',
+      child: Consumer<TransactionProvider>(
+        builder: (context, provider, child) => Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
                 children: [
-                  const Text(
-                    'Select Party',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.person_add_alt_1_outlined,
-                      color: Color(0xFF6366F1),
+                  Expanded(
+                    child: Text(
+                      'Search or add a person/party',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
                     ),
+                  ),
+                  TextButton.icon(
                     onPressed: () =>
                         _showAddPartyDialog(autocompleteController),
+                    icon: const Icon(Icons.person_add_alt_1_outlined, size: 18),
+                    label: const Text('New Party'),
+                    style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF6366F1)),
                   ),
                 ],
               ),
-              const Divider(),
-              Expanded(
-                child: provider.parties.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No parties added yet',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: provider.parties.length,
-                        itemBuilder: (context, index) {
-                          final party = provider.parties[index];
-                          return ListTile(
-                            leading: const CircleAvatar(
-                              child: Icon(Icons.person_outline, size: 20),
+            ),
+            const Divider(),
+            Expanded(
+              child: provider.parties.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.person_search_outlined,
+                              size: 64, color: Colors.grey[200]),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'No parties added yet',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(8),
+                      itemCount: provider.parties.length,
+                      itemBuilder: (context, index) {
+                        final party = provider.parties[index];
+                        return Container(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey[100]!),
+                          ),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: const Color(0xFFF3F4F6),
+                              child: Text(party[0].toUpperCase(),
+                                  style: const TextStyle(
+                                      color: Color(0xFF6366F1),
+                                      fontWeight: FontWeight.bold)),
                             ),
-                            title: Text(party),
+                            title: Text(party,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600)),
+                            trailing: const Icon(Icons.chevron_right, size: 18),
                             onTap: () {
                               autocompleteController.text = party;
                               _partyController.text = party;
                               Navigator.pop(context);
                             },
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
       ),
     );
@@ -194,91 +222,122 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   void _showAddPartyDialog(TextEditingController autocompleteController) {
     final ctrl = TextEditingController();
-    showDialog(
+    CustomModals.showPremiumDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add New Party'),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'Party Name'),
+      title: 'Add New Party',
+      content: TextField(
+        controller: ctrl,
+        autofocus: true,
+        decoration: InputDecoration(
+          hintText: 'Party Name',
+          filled: true,
+          fillColor: Colors.grey[50],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CANCEL'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (ctrl.text.isNotEmpty) {
-                await context.read<TransactionProvider>().addParty(ctrl.text);
-                autocompleteController.text = ctrl.text;
-                _partyController.text = ctrl.text;
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Close bottom sheet
-              }
-            },
-            child: const Text('ADD'),
-          ),
-        ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('CANCEL', style: TextStyle(color: Colors.grey[600])),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            if (ctrl.text.isNotEmpty) {
+              await context.read<TransactionProvider>().addParty(ctrl.text);
+              autocompleteController.text = ctrl.text;
+              _partyController.text = ctrl.text;
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Close bottom sheet
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
+          child: const Text('ADD PARTY'),
+        ),
+      ],
     );
   }
 
   void _showCategoryPicker() {
     final provider = context.read<TransactionProvider>();
-    showModalBottomSheet(
+    CustomModals.showPremiumBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      title: 'Select Category',
+      child: StatefulBuilder(
+        builder: (context, setModalState) => Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
                 children: [
-                  const Text(
-                    'Select Category',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.add_circle_outline,
-                      color: Color(0xFF6366F1),
+                  const Expanded(
+                    child: Text(
+                      'Choose a category for this entry',
+                      style: TextStyle(color: Colors.grey, fontSize: 13),
                     ),
+                  ),
+                  TextButton.icon(
                     onPressed: () => _showAddCategoryDialog(setModalState),
+                    icon: const Icon(Icons.add_circle_outline, size: 18),
+                    label: const Text('New'),
+                    style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF6366F1)),
                   ),
                 ],
               ),
-              const Divider(),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: provider.categories.length,
-                  itemBuilder: (context, index) {
-                    final cat = provider.categories[index];
-                    return ListTile(
-                      title: Text(cat),
-                      leading: const Icon(Icons.category_outlined, size: 20),
-                      trailing: _selectedCategory == cat
-                          ? const Icon(
-                              Icons.check_circle,
-                              color: Color(0xFF6366F1),
-                            )
+            ),
+            const Divider(),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(12),
+                itemCount: provider.categories.length,
+                itemBuilder: (context, index) {
+                  final cat = provider.categories[index];
+                  final isSelected = _selectedCategory == cat;
+                  return Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFFEEF2FF)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListTile(
+                      title: Text(cat,
+                          style: TextStyle(
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.normal,
+                            color: isSelected
+                                ? const Color(0xFF4338CA)
+                                : Colors.black87,
+                          )),
+                      leading: Icon(Icons.category_outlined,
+                          size: 20,
+                          color: isSelected
+                              ? const Color(0xFF6366F1)
+                              : Colors.grey),
+                      trailing: isSelected
+                          ? const Icon(Icons.check_circle,
+                              color: Color(0xFF6366F1))
                           : null,
                       onTap: () {
                         setState(() => _selectedCategory = cat);
                         Navigator.pop(context);
                       },
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -286,34 +345,46 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   void _showAddCategoryDialog(Function setModalState) {
     final ctrl = TextEditingController();
-    showDialog(
+    CustomModals.showPremiumDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('New Category'),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'Category Name'),
+      title: 'New Category',
+      content: TextField(
+        controller: ctrl,
+        autofocus: true,
+        decoration: InputDecoration(
+          hintText: 'Category Name',
+          filled: true,
+          fillColor: Colors.grey[50],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CANCEL'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (ctrl.text.isNotEmpty) {
-                await context.read<TransactionProvider>().addCategory(
-                  ctrl.text,
-                );
-                setModalState(() {});
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('ADD'),
-          ),
-        ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('CANCEL', style: TextStyle(color: Colors.grey[600])),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            if (ctrl.text.isNotEmpty) {
+              await context.read<TransactionProvider>().addCategory(
+                    ctrl.text,
+                  );
+              setModalState(() {});
+              Navigator.pop(context);
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
+          child: const Text('ADD'),
+        ),
+      ],
     );
   }
 
@@ -493,13 +564,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                               controller: controller,
                               focusNode: focusNode,
                               onChanged: (v) => _partyController.text = v,
-                              validator: (v) => v == null || v.isEmpty
-                                  ? 'Party name is required'
-                                  : null,
                               decoration: InputDecoration(
                                 labelText: isCashIn
-                                    ? 'From (Person/Party)'
-                                    : 'To (Person/Party)',
+                                    ? 'From (Person/Party) (Optional)'
+                                    : 'To (Person/Party) (Optional)',
                                 prefixIcon: const Icon(
                                   Icons.person_outline,
                                   color: Colors.grey,

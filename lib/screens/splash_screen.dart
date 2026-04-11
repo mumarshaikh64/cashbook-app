@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'cashbooks_screen.dart';
 import 'auth_screen.dart';
 import '../providers/app_provider.dart';
+import '../services/device_security_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -17,12 +19,28 @@ class _SplashScreenState extends State<SplashScreen> {
     _navigateToNext();
   }
 
-  _navigateToNext() async {
-    await Future.delayed(const Duration(seconds: 3));
+  Future<void> _navigateToNext() async {
+    await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    final onboarded = context.read<AppProvider>().isOnboarded;
-    if (onboarded) {
+    final appProvider = context.read<AppProvider>();
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email ?? appProvider.email;
+
+    if (email != null) {
+      // Perform Device Security Check
+      final securityService = DeviceSecurityService();
+      final result = await securityService.verifyDevice(email);
+
+      if (result != "success") {
+        if (mounted) {
+          _showLockedDialog(result);
+        }
+        return;
+      }
+    }
+
+    if (appProvider.isOnboarded) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => CashbooksScreen()),
@@ -33,6 +51,48 @@ class _SplashScreenState extends State<SplashScreen> {
         MaterialPageRoute(builder: (context) => AuthScreen()),
       );
     }
+  }
+
+  void _showLockedDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.lock_person, color: Colors.red),
+            SizedBox(width: 10),
+            Text('Security Alert'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              message,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Please contact support if you have changed your phone.',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
+            ),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

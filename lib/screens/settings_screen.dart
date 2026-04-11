@@ -7,6 +7,7 @@ import '../providers/app_provider.dart';
 import '../providers/transaction_provider.dart';
 import 'auth_screen.dart';
 import 'edit_profile_screen.dart';
+import '../widgets/custom_modals.dart';
 
 class SettingsScreen extends StatefulWidget {
   @override
@@ -97,16 +98,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   _handleRestore() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await CustomModals.showPremiumDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Restore Backup?'),
-        content: const Text('This will replace your current data with the backup from Google Drive. This cannot be undone.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('CANCEL')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('RESTORE', style: TextStyle(color: Colors.red))),
-        ],
-      ),
+      title: 'Restore Backup?',
+      content: const Text(
+          'This will replace your current data with the backup from Google Drive. This cannot be undone.'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text('CANCEL', style: TextStyle(color: Colors.grey[600])),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
+          child: const Text('RESTORE'),
+        ),
+      ],
     );
     if (confirmed != true) return;
 
@@ -118,7 +131,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         await context.read<TransactionProvider>().fetchBooks();
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Database restored successfully!'), backgroundColor: Colors.green),
+          const SnackBar(
+              content: Text('✅ Database restored successfully!'),
+              backgroundColor: Colors.green),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -127,7 +142,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Restore failed: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Restore failed: $e')));
       }
     }
     if (mounted) setState(() => _isRestoring = false);
@@ -396,23 +412,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _handleLogout(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await CustomModals.showPremiumDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Logout?'),
-        content: const Text('Are you sure you want to logout? Your local data will remain safe.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('CANCEL')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('LOGOUT', style: TextStyle(color: Colors.red))),
-        ],
-      ),
+      title: 'Logout?',
+      content: const Text(
+          'Are you sure you want to logout? Your local data will remain safe.'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text('CANCEL', style: TextStyle(color: Colors.grey[600])),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
+          child: const Text('LOGOUT'),
+        ),
+      ],
     );
     if (confirmed == true) {
       await _googleDriveService.signOut();
       if (!mounted) return;
       await context.read<AppProvider>().logout();
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => AuthScreen()), (route) => false);
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => AuthScreen()), (route) => false);
     }
   }
 

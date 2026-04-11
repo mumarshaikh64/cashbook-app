@@ -12,6 +12,7 @@ import '../services/report_service.dart';
 import '../utils/formatters.dart';
 import '../widgets/receipt_clipper.dart';
 import 'add_transaction_screen.dart';
+import '../widgets/custom_modals.dart';
 
 class TransactionDetailScreen extends StatefulWidget {
   final TransactionModel transaction;
@@ -285,10 +286,63 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
   }
 
   void _confirmDelete(BuildContext context, int id) {
-    showDialog(context: context, builder: (context) => AlertDialog(title: const Text('Delete Entry?'), content: const Text('Are you sure you want to delete this entry?'), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')), TextButton(onPressed: () async { await context.read<TransactionProvider>().deleteTransaction(id); Navigator.pop(context); Navigator.pop(context); }, child: const Text('DELETE', style: TextStyle(color: Colors.red)))]));
+    CustomModals.showPremiumDialog(
+      context: context,
+      title: 'Delete Entry?',
+      content: const Text(
+          'Are you sure you want to delete this entry? This action cannot be undone.'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('CANCEL', style: TextStyle(color: Colors.grey[600])),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            await context.read<TransactionProvider>().deleteTransaction(id);
+            Navigator.pop(context); // Close dialog
+            Navigator.pop(context); // Go back home
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
+          child: const Text('DELETE'),
+        ),
+      ],
+    );
   }
 
   void _viewImage(BuildContext context, String path) {
-    showDialog(context: context, builder: (context) => Dialog(backgroundColor: Colors.transparent, child: InteractiveViewer(child: Image.file(File(path)))));
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            Expanded(
+              child: InteractiveViewer(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.file(File(path)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
   }
 }
