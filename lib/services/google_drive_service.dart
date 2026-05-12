@@ -6,6 +6,7 @@ import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sig
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'database_helper.dart';
 
 class GoogleDriveService {
   static final GoogleDriveService _instance = GoogleDriveService._internal();
@@ -25,6 +26,19 @@ class GoogleDriveService {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return null;
 
+      // Ensure Google Drive permission is granted for backups gracefully
+      try {
+        final bool canAccess = await _googleSignIn.canAccessScopes(<String>[drive.DriveApi.driveFileScope]);
+        if (!canAccess) {
+          final bool authorized = await _googleSignIn.requestScopes(<String>[drive.DriveApi.driveFileScope]);
+          if (!authorized) {
+            throw Exception('Google Drive permission is required to enable backup.');
+          }
+        }
+      } catch (e) {
+        print('Scope check warning (safe to ignore if granted during login): $e');
+      }
+
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
@@ -43,7 +57,8 @@ class GoogleDriveService {
       return user;
     } catch (e) {
       print('Google Sign-In Error: $e');
-      return null;
+      // Rethrow to allow UI to display the exact permission or network error
+      rethrow;
     }
   }
 
@@ -87,6 +102,29 @@ class GoogleDriveService {
 
   Future<drive.DriveApi?> _getDriveApi() async {
     try {
+      if (_googleSignIn.currentUser == null) {
+        try {
+          await _googleSignIn.signInSilently();
+        } catch (_) {}
+      }
+
+      if (_googleSignIn.currentUser == null) {
+        return null;
+      }
+
+      try {
+        final bool canAccess = await _googleSignIn.canAccessScopes(<String>[drive.DriveApi.driveFileScope]);
+        if (!canAccess) {
+          final bool authorized = await _googleSignIn.requestScopes(<String>[drive.DriveApi.driveFileScope]);
+          if (!authorized) {
+            print('User denied Google Drive scope access.');
+            return null;
+          }
+        }
+      } catch (e) {
+        print('Scope check warning in getDriveApi: $e');
+      }
+
       final client = await _googleSignIn.authenticatedClient();
       if (client == null) return null;
       return drive.DriveApi(client);
@@ -102,7 +140,9 @@ class GoogleDriveService {
       // Re-signing in since the client session might be lost
       await _googleSignIn.signInSilently();
       final freshApi = await _getDriveApi();
-      if (freshApi == null) return false;
+      if (freshApi == null) {
+        throw Exception('Google Drive access not granted. Please sign out and sign in again, making sure to check the box for Google Drive access.');
+      }
       return _runBackup(freshApi);
     }
     return _runBackup(driveApi);
@@ -110,11 +150,16 @@ class GoogleDriveService {
 
   Future<bool> _runBackup(drive.DriveApi driveApi) async {
     try {
+      // Ensure local SQLite database is fully created and initialized before backing up
+      await DatabaseHelper.instance.database;
+
       final dbPath = await getDatabasesPath();
       final path = p.join(dbPath, 'cashbook.db');
       final file = File(path);
 
-      if (!await file.exists()) return false;
+      if (!await file.exists()) {
+        throw Exception('Database file could not be found or created. Please add a transaction first.');
+      }
 
       final driveFile = drive.File();
       driveFile.name = 'cashbook_backup.db';
@@ -135,7 +180,7 @@ class GoogleDriveService {
       return true;
     } catch (e) {
       print('Backup Exec Error: $e');
-      return false;
+      throw Exception('Network or API Error: $e');
     }
   }
 
@@ -144,7 +189,9 @@ class GoogleDriveService {
     if (driveApi == null) {
       await _googleSignIn.signInSilently();
       final freshApi = await _getDriveApi();
-      if (freshApi == null) return false;
+      if (freshApi == null) {
+        throw Exception('Google Drive access not granted. Please sign in with Google Drive permissions enabled.');
+      }
       return _runRestore(freshApi);
     }
     return _runRestore(driveApi);
@@ -153,7 +200,9 @@ class GoogleDriveService {
   Future<bool> _runRestore(drive.DriveApi driveApi) async {
     try {
       final list = await driveApi.files.list(q: "name = 'cashbook_backup.db' and trashed = false");
-      if (list.files == null || list.files!.isEmpty) return false;
+      if (list.files == null || list.files!.isEmpty) {
+        throw Exception('No backup file found on your Google Drive account.');
+      }
 
       final fileId = list.files!.first.id!;
       final media = await driveApi.files.get(fileId, downloadOptions: drive.DownloadOptions.fullMedia) as drive.Media;
@@ -170,7 +219,7 @@ class GoogleDriveService {
       return true;
     } catch (e) {
       print('Restore Exec Error: $e');
-      return false;
+      throw Exception('Restore failed: $e');
     }
   }
 }

@@ -157,7 +157,7 @@ class _AuthScreenState extends State<AuthScreen> {
         Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileSetupScreen()));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login failed: ${e.toString().replaceAll('Exception: ', '')}')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

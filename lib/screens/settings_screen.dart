@@ -47,17 +47,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   _handleSignIn() async {
     setState(() => _isSigningIn = true);
-    final user = await _googleDriveService.signIn();
-    if (mounted) {
-      setState(() {
-        _isSigningIn = false;
-        _isSignedIn = user != null;
-        if (user != null) {
-          _googleEmail = user.email;
-          _googleName = user.displayName;
-          _googlePhoto = user.photoURL;
-        }
-      });
+    try {
+      final user = await _googleDriveService.signIn();
+      if (mounted) {
+        setState(() {
+          _isSigningIn = false;
+          _isSignedIn = user != null;
+          if (user != null) {
+            _googleEmail = user.email;
+            _googleName = user.displayName;
+            _googlePhoto = user.photoURL;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSigningIn = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        );
+      }
     }
   }
 
@@ -86,12 +95,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Backup failed. Please sign in first.')),
+          const SnackBar(content: Text('Backup failed. Please ensure Google Drive permission is granted.')),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Backup failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Backup failed: ${e.toString().replaceAll('Exception: ', '')}')));
       }
     }
     if (mounted) setState(() => _isBackingUp = false);
