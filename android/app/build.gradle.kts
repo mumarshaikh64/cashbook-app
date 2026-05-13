@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.antigravity.cashbook_app"
+    namespace = "com.softgrid.nayakhata"
     compileSdk = 36
     ndkVersion = "27.0.12077973"
 
@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.antigravity.cashbook_app"
+        applicationId = "com.softgrid.nayakhata"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

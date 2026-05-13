@@ -9,6 +9,7 @@ import 'dashboard_screen.dart';
 import 'settings_screen.dart';
 import 'splash_screen.dart';
 import 'help_screen.dart';
+import 'customers_screen.dart';
 import '../utils/formatters.dart';
 import '../widgets/custom_modals.dart';
 
@@ -20,6 +21,7 @@ class CashbooksScreen extends StatefulWidget {
 class _CashbooksScreenState extends State<CashbooksScreen> {
   int _selectedIndex = 0;
   bool _isSearching = false;
+  bool _showBanner = true;
   String _searchQuery = "";
   DateTimeRange? _selectedDateRange;
   final TextEditingController _searchController = TextEditingController();
@@ -34,11 +36,12 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _selectedIndex == 2 ? null : _buildAppBar(),
+      appBar: _selectedIndex == 3 ? null : _buildAppBar(),
       body: IndexedStack(
         index: _selectedIndex,
         children: [
           _buildBody(),
+          const CustomersScreen(),
           const HelpScreen(),
           SettingsScreen(),
         ],
@@ -94,7 +97,7 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
 
     return AppBar(
       backgroundColor: Colors.white,
-      elevation: 0.5,
+      elevation: 0,
       leading: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Container(
@@ -202,7 +205,7 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!_isSearching) _buildPromotionalBanner(),
+              if (!_isSearching && _showBanner) _buildPromotionalBanner(),
               _buildSectionHeader(),
               if (filteredBooks.isEmpty && !provider.isLoading)
                 _buildEmptyState(
@@ -241,7 +244,7 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Basics of CashBook',
+                        'Basics of Naya Khata',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -250,12 +253,13 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Learn to use cashbook',
+                        'Learn to use Naya Khata',
                         style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: () {},
+                        // Navigate to Help tab (index 2)
+                        onPressed: () => setState(() => _selectedIndex = 2),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.black,
@@ -288,10 +292,21 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                 ),
               ],
             ),
-            const Positioned(
+            // Close button — hides the banner
+            Positioned(
               top: 0,
               right: 0,
-              child: Icon(Icons.close, color: Colors.white70, size: 20),
+              child: GestureDetector(
+                onTap: () => setState(() => _showBanner = false),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white70,
+                    size: 20,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -517,7 +532,10 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF6366F1),
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -529,9 +547,9 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                 onPressed: () async {
                   if (controller.text.isNotEmpty) {
                     await context.read<TransactionProvider>().renameBook(
-                          bookId,
-                          controller.text,
-                        );
+                      bookId,
+                      controller.text,
+                    );
                     Navigator.pop(context);
                   }
                 },
@@ -542,7 +560,10 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                 ),
                 child: const Text(
                   'UPDATE NAME',
-                  style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
                 ),
               ),
             ),
@@ -577,8 +598,11 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.warning_amber_rounded,
-                        color: Color(0xFFD32F2F), size: 24),
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Color(0xFFD32F2F),
+                      size: 24,
+                    ),
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Text(
@@ -597,14 +621,18 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
               RichText(
                 text: TextSpan(
                   style: const TextStyle(
-                      color: Colors.black87, fontSize: 14, height: 1.5),
+                    color: Colors.black87,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
                   children: [
                     const TextSpan(text: 'To confirm, please type '),
                     TextSpan(
                       text: bookName,
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFEF4444)),
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFEF4444),
+                      ),
                     ),
                     const TextSpan(text: ' below.'),
                   ],
@@ -629,8 +657,10 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        const BorderSide(color: Color(0xFFEF4444), width: 2),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFEF4444),
+                      width: 2,
+                    ),
                   ),
                 ),
               ),
@@ -641,7 +671,9 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                 child: ElevatedButton(
                   onPressed: isMatch
                       ? () {
-                          context.read<TransactionProvider>().deleteBook(bookId);
+                          context.read<TransactionProvider>().deleteBook(
+                            bookId,
+                          );
                           Navigator.pop(context);
                         }
                       : null,
@@ -657,8 +689,10 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                   ),
                   child: const Text(
                     'DELETE PERMANENTLY',
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
                   ),
                 ),
               ),
@@ -719,6 +753,11 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
         'icon': Icons.book_outlined,
         'activeIcon': Icons.book_rounded,
         'label': 'Cashbooks',
+      },
+      {
+        'icon': Icons.people_outline_rounded,
+        'activeIcon': Icons.people_rounded,
+        'label': 'Customers',
       },
       {
         'icon': Icons.help_outline_rounded,
@@ -843,8 +882,10 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: Color(0xFF6366F1), width: 2),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF6366F1),
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -856,8 +897,8 @@ class _CashbooksScreenState extends State<CashbooksScreen> {
                 onPressed: () {
                   if (controller.text.isNotEmpty) {
                     context.read<TransactionProvider>().createBook(
-                          controller.text,
-                        );
+                      controller.text,
+                    );
                     Navigator.pop(context);
                   }
                 },

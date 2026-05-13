@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/transaction.dart';
 import '../models/book.dart';
+import '../models/party.dart';
 import '../services/database_helper.dart';
 
 class TransactionProvider with ChangeNotifier {
@@ -9,6 +10,7 @@ class TransactionProvider with ChangeNotifier {
   List<TransactionModel> _transactions = [];
   List<String> _categories = [];
   List<String> _parties = [];
+  List<PartyModel> _partyModels = [];
   double _totalCashIn = 0.0;
   double _totalCashOut = 0.0;
   bool _isLoading = false;
@@ -18,6 +20,7 @@ class TransactionProvider with ChangeNotifier {
   List<TransactionModel> get transactions => _transactions;
   List<String> get categories => _categories;
   List<String> get parties => _parties;
+  List<PartyModel> get partyModels => _partyModels;
   double get totalCashIn => _totalCashIn;
   double get totalCashOut => _totalCashOut;
   double get balance => _totalCashIn - _totalCashOut;
@@ -92,11 +95,27 @@ class TransactionProvider with ChangeNotifier {
 
   Future<void> fetchParties() async {
     _parties = await DatabaseHelper.instance.getAllParties();
+    _partyModels = await DatabaseHelper.instance.getAllPartiesWithDetails();
     notifyListeners();
   }
 
   Future<void> addParty(String name) async {
     await DatabaseHelper.instance.insertParty(name);
+    await fetchParties();
+  }
+
+  Future<void> addPartyModel(PartyModel party) async {
+    await DatabaseHelper.instance.insertPartyModel(party);
+    await fetchParties();
+  }
+
+  Future<void> updatePartyModel(PartyModel party) async {
+    await DatabaseHelper.instance.updatePartyModel(party);
+    await fetchParties();
+  }
+
+  Future<void> deleteParty(int id) async {
+    await DatabaseHelper.instance.deleteParty(id);
     await fetchParties();
   }
 

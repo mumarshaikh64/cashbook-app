@@ -1,26 +1,36 @@
 {
   "project_info": {
-    "project_number": "950386874914",
-    "project_id": "cashbook-87dfc",
-    "storage_bucket": "cashbook-87dfc.firebasestorage.app"
+    "project_number": "781643880585",
+    "project_id": "nayakhata-47dc5",
+    "storage_bucket": "nayakhata-47dc5.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:950386874914:android:a96ad5ae86525b8ae6887b",
+        "mobilesdk_app_id": "1:781643880585:android:9c5e65eb3e03b1fcbc4e58",
         "android_client_info": {
-          "package_name": "com.antigravity.cashbook_app"
+          "package_name": "com.softgrid.nayakhata"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "781643880585-6jfj59pk0cridl7655vqe8hfvlra39hs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDVcAqWC9EzCdKhqdP3u0WCMuy4OGlWbjA"
+          "current_key": "AIzaSyBYyrZ5LAJ9tE7N_PCaRwo8fKzHOJzAy3s"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "781643880585-6jfj59pk0cridl7655vqe8hfvlra39hs.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

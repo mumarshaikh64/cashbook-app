@@ -98,8 +98,7 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
           body: Column(
             children: [
-              _buildShareBanner(),
-              _buildReportSummary(),
+          _buildReportSummary(),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                 child: Row(
@@ -166,43 +165,6 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildShareBanner() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.group, color: Color(0xFF6366F1), size: 30),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Share books with multiple members',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                Text(
-                  'Tap here to know more',
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close, size: 20, color: Colors.grey),
-            onPressed: () {},
-          ),
-        ],
-      ),
     );
   }
 

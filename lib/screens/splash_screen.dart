@@ -69,10 +69,7 @@ class _SplashScreenState extends State<SplashScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              message,
-              style: const TextStyle(fontSize: 16),
-            ),
+            Text(message, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 20),
             const Text(
               'Please contact support if you have changed your phone.',
@@ -86,7 +83,8 @@ class _SplashScreenState extends State<SplashScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6366F1),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30)),
+                borderRadius: BorderRadius.circular(30),
+              ),
             ),
             child: const Text('OK'),
           ),
@@ -135,9 +133,12 @@ class _SplashScreenState extends State<SplashScreen> {
                       ],
                     ),
                     padding: const EdgeInsets.all(20),
-                    child: Image.asset(
-                      'assets/images/app_icon.png',
-                      fit: BoxFit.contain,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/images/app_icon.png',
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ),
@@ -147,7 +148,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: Column(
                     children: [
                       const Text(
-                        'CASHBOOK',
+                        'NAYA KHATA',
                         style: TextStyle(
                           color: Color(0xFF1F2937),
                           fontSize: 28,

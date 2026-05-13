@@ -42,47 +42,47 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyBXEz-1LlSvjU2bODCYak15RAExQz__pi8',
-    appId: '1:1069058058728:web:480bdee83cafc393e5dc5d',
-    messagingSenderId: '1069058058728',
-    projectId: 'cashbook-4b0ec',
-    authDomain: 'cashbook-4b0ec.firebaseapp.com',
-    storageBucket: 'cashbook-4b0ec.firebasestorage.app',
+    appId: '1:781643880585:android:9c5e65eb3e03b1fcbc4e58',
+    messagingSenderId: '781643880585',
+    projectId: 'nayakhata-47dc5',
+    authDomain: 'nayakhata-47dc5.firebaseapp.com',
+    storageBucket: 'nayakhata-47dc5.firebasestorage.app',
     measurementId: 'G-BV88P38HHG',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDVcAqWC9EzCdKhqdP3u0WCMuy4OGlWbjA',
-    appId: '1:950386874914:android:a96ad5ae86525b8ae6887b',
-    messagingSenderId: '950386874914',
-    projectId: 'cashbook-87dfc',
-    storageBucket: 'cashbook-87dfc.firebasestorage.app',
+    apiKey: 'AIzaSyBYyrZ5LAJ9tE7N_PCaRwo8fKzHOJzAy3s',
+    appId: '1:781643880585:android:9c5e65eb3e03b1fcbc4e58',
+    messagingSenderId: '781643880585',
+    projectId: 'nayakhata-47dc5',
+    storageBucket: 'nayakhata-47dc5.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyA3GYLQAuoEHq1U4xH6ZussAtIWbhKHaSA',
     appId: '1:1069058058728:ios:95f734b9f5c85a7de5dc5d',
-    messagingSenderId: '1069058058728',
-    projectId: 'cashbook-4b0ec',
-    storageBucket: 'cashbook-4b0ec.firebasestorage.app',
+    messagingSenderId: '781643880585',
+    projectId: 'nayakhata-47dc5',
+    storageBucket: 'nayakhata-47dc5.firebasestorage.app',
     iosBundleId: 'com.antigravity.cashbookApp',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyA3GYLQAuoEHq1U4xH6ZussAtIWbhKHaSA',
     appId: '1:1069058058728:ios:95f734b9f5c85a7de5dc5d',
-    messagingSenderId: '1069058058728',
-    projectId: 'cashbook-4b0ec',
-    storageBucket: 'cashbook-4b0ec.firebasestorage.app',
+    messagingSenderId: '781643880585',
+    projectId: 'nayakhata-47dc5',
+    storageBucket: 'nayakhata-47dc5.firebasestorage.app',
     iosBundleId: 'com.antigravity.cashbookApp',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyBXEz-1LlSvjU2bODCYak15RAExQz__pi8',
     appId: '1:1069058058728:web:2ec2645d61cdf9dee5dc5d',
-    messagingSenderId: '1069058058728',
-    projectId: 'cashbook-4b0ec',
-    authDomain: 'cashbook-4b0ec.firebaseapp.com',
-    storageBucket: 'cashbook-4b0ec.firebasestorage.app',
+    messagingSenderId: '781643880585',
+    projectId: 'nayakhata-47dc5',
+    authDomain: 'nayakhata-47dc5.firebaseapp.com',
+    storageBucket: 'nayakhata-47dc5.firebasestorage.app',
     measurementId: 'G-QQ526010RP',
   );
 }

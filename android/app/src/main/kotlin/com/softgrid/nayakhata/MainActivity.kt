@@ -1,4 +1,4 @@
-package com.antigravity.cashbook_app
+package com.softgrid.nayakhata
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -132,7 +132,7 @@ class _BusinessTypeScreenState extends State<BusinessTypeScreen> {
                 children: [
                   const Icon(Icons.business_outlined, color: Colors.blue),
                   const SizedBox(width: 16),
-                  const Text('Setting up your CashBook account', style: TextStyle(fontSize: 16)),
+                  const Text('Setting up your Naya Khata account', style: TextStyle(fontSize: 16)),
                 ],
               ),
             ),

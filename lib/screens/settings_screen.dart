@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import '../services/google_drive_service.dart';
 import '../providers/app_provider.dart';
@@ -8,6 +9,8 @@ import '../providers/transaction_provider.dart';
 import 'auth_screen.dart';
 import 'edit_profile_screen.dart';
 import '../widgets/custom_modals.dart';
+import 'terms_screen.dart';
+import 'privacy_policy_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   @override
@@ -24,11 +27,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? _googleName;
   String? _googlePhoto;
   String? _lastBackup;
+  String _appVersion = 'Version 1.0.0';
+
 
   @override
   void initState() {
     super.initState();
     _checkSignInStatus();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) setState(() => _appVersion = 'Version ${info.version}');
   }
 
   _checkSignInStatus() async {
@@ -110,23 +121,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final confirmed = await CustomModals.showPremiumDialog<bool>(
       context: context,
       title: 'Restore Backup?',
+      icon: Icons.restore_rounded,
+      iconColor: const Color(0xFFEF4444),
       content: const Text(
-          'This will replace your current data with the backup from Google Drive. This cannot be undone.'),
+        'This will replace your current data with the backup from Google Drive.\n\nThis action cannot be undone.',
+      ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text('CANCEL', style: TextStyle(color: Colors.grey[600])),
-        ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
+            backgroundColor: const Color(0xFFEF4444),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            elevation: 0,
           ),
-          child: const Text('RESTORE'),
+          child: const Text('RESTORE', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            foregroundColor: Colors.grey[600],
+          ),
+          child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
         ),
       ],
     );
@@ -327,13 +345,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // ─── About ───────────────────────────────
-          _buildSectionHeader('About'),
+          // ─── About & Legal ───────────────────────
+          _buildSectionHeader('About & Legal'),
           Container(
             color: Colors.white,
             child: Column(
               children: [
-                _buildActionRow(Icons.info_outline, 'Version 1.0.0', null, subtitle: 'Built with ♥ by Softgrid Solutions'),
+                _buildActionRow(
+                  Icons.gavel_rounded,
+                  'Terms & Conditions',
+                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TermsScreen())),
+                ),
+                const Divider(height: 1, indent: 54),
+                _buildActionRow(
+                  Icons.shield_rounded,
+                  'Privacy Policy',
+                  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen())),
+                ),
+                const Divider(height: 1, indent: 54),
+                _buildActionRow(
+                  Icons.info_outline,
+                  _appVersion,
+                  null,
+                  subtitle: 'Built with ♥ by Softgrid Solutions',
+                ),
               ],
             ),
           ),

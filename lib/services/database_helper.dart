@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/transaction.dart';
 import '../models/book.dart';
+import '../models/party.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -50,7 +51,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -99,6 +100,12 @@ class DatabaseHelper {
         await db.execute('ALTER TABLE transactions ADD COLUMN customFields TEXT');
       } catch (e) {}
     }
+    if (oldVersion < 8) {
+      try {
+        await db.execute('ALTER TABLE parties ADD COLUMN phone TEXT');
+        await db.execute('ALTER TABLE parties ADD COLUMN address TEXT');
+      } catch (e) {}
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -140,7 +147,7 @@ class DatabaseHelper {
     ''';
     await db.execute(categoryTable);
     
-    await db.execute('CREATE TABLE parties (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE)');
+    await db.execute('CREATE TABLE parties (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, phone TEXT, address TEXT)');
     
     final commonCategories = ['Salary', 'Rent', 'Food', 'Fuel', 'Shopping', 'Business', 'Travel', 'Medical', 'Other'];
     for (var category in commonCategories) {
@@ -202,6 +209,43 @@ class DatabaseHelper {
   Future<int> insertParty(String name) async {
     final db = await instance.database;
     return await db.insert('parties', {'name': name}, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<List<PartyModel>> getAllPartiesWithDetails() async {
+    final db = await instance.database;
+    const query = '''
+      SELECT p.*,
+      (SELECT SUM(amount) FROM transactions WHERE transactions.partyName = p.name AND transactions.type = 0) as cashIn,
+      (SELECT SUM(amount) FROM transactions WHERE transactions.partyName = p.name AND transactions.type = 1) as cashOut
+      FROM parties p
+      ORDER BY p.name ASC
+    ''';
+    final result = await db.rawQuery(query);
+    return result.map((json) {
+      return PartyModel(
+        id: json['id'] as int?,
+        name: json['name'] as String,
+        phone: json['phone'] as String?,
+        address: json['address'] as String?,
+        cashIn: (json['cashIn'] as num? ?? 0.0).toDouble(),
+        cashOut: (json['cashOut'] as num? ?? 0.0).toDouble(),
+      );
+    }).toList();
+  }
+
+  Future<int> insertPartyModel(PartyModel party) async {
+    final db = await instance.database;
+    return await db.insert('parties', party.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<int> updatePartyModel(PartyModel party) async {
+    final db = await instance.database;
+    return await db.update('parties', party.toMap(), where: 'id = ?', whereArgs: [party.id]);
+  }
+
+  Future<int> deleteParty(int id) async {
+    final db = await instance.database;
+    return await db.delete('parties', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<double> getTotalCashIn(int bookId) async {

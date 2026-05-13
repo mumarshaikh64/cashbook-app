@@ -1,4 +1,4 @@
-import 'package:cashbook_app/firebase_options.dart';
+import './firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/transaction_provider.dart';
@@ -30,7 +30,7 @@ class CashbookApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Digital Cashbook',
+      title: 'Naya Khata',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: Consumer<AppProvider>(

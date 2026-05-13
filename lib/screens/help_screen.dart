@@ -1,9 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class HelpScreen extends StatelessWidget {
+class HelpScreen extends StatefulWidget {
   const HelpScreen({super.key});
+
+  @override
+  State<HelpScreen> createState() => _HelpScreenState();
+}
+
+class _HelpScreenState extends State<HelpScreen> {
+  String _version = 'Version 1.0.0';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) setState(() => _version = 'Version ${info.version}');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +74,7 @@ class HelpScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     const Text(
-                      'Cashbook by Softgrid',
+                      'Naya Khata',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -63,9 +82,12 @@ class HelpScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Version 1.0.0',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    Text(
+                      _version,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -140,74 +162,76 @@ class HelpScreen extends StatelessWidget {
             _buildContactCard(
               Icons.email_outlined,
               'Email Us',
-              'info@softgrid.solutions',
+              'support@nayakhata.com',
               const Color(0xFF6366F1),
-              () => launchUrl(Uri.parse('mailto:info@softgrid.solutions')),
+              () => launchUrl(Uri.parse('mailto:[EMAIL_ADDRESS]')),
             ),
             _buildContactCard(
               Icons.language,
               'Visit Website',
-              'softgrid.solutions',
+              'nayakhata.com',
               const Color(0xFF10B981),
-              () => launchUrl(Uri.parse('https://softgrid.solutions'), mode: LaunchMode.externalApplication),
+              () => launchUrl(
+                Uri.parse('https://nayakhata.com'),
+                mode: LaunchMode.externalApplication,
+              ),
             ),
             _buildContactCard(
               Icons.phone_outlined,
               'Call Us',
-              '+92 3202287330',
+              '+92 320 377 6802',
               const Color(0xFFF59E0B),
-              () => launchUrl(Uri.parse('tel:+923202287330')),
+              () => launchUrl(Uri.parse('tel:+923203776802')),
             ),
 
             const SizedBox(height: 24),
 
             // Tips Section
-            FadeInUp(
-              delay: const Duration(milliseconds: 400),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFFBBF24)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Icon(
-                      Icons.lightbulb_outline,
-                      color: Color(0xFFF59E0B),
-                      size: 28,
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Pro Tip',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Use the party name field to tag contacts. This helps generate accurate contact-wise reports for your business.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
+            // FadeInUp(
+            //   delay: const Duration(milliseconds: 400),
+            //   child: Container(
+            //     width: double.infinity,
+            //     padding: const EdgeInsets.all(16),
+            //     decoration: BoxDecoration(
+            //       color: const Color(0xFFFEF3C7),
+            //       borderRadius: BorderRadius.circular(12),
+            //       border: Border.all(color: const Color(0xFFFBBF24)),
+            //     ),
+            //     child: Row(
+            //       crossAxisAlignment: CrossAxisAlignment.start,
+            //       children: const [
+            //         Icon(
+            //           Icons.lightbulb_outline,
+            //           color: Color(0xFFF59E0B),
+            //           size: 28,
+            //         ),
+            //         SizedBox(width: 12),
+            //         Expanded(
+            //           child: Column(
+            //             crossAxisAlignment: CrossAxisAlignment.start,
+            //             children: [
+            //               Text(
+            //                 'Pro Tip',
+            //                 style: TextStyle(
+            //                   fontWeight: FontWeight.bold,
+            //                   fontSize: 15,
+            //                 ),
+            //               ),
+            //               SizedBox(height: 4),
+            //               Text(
+            //                 'Use the party name field to tag contacts. This helps generate accurate contact-wise reports for your business.',
+            //                 style: TextStyle(
+            //                   fontSize: 13,
+            //                   color: Colors.black87,
+            //                 ),
+            //               ),
+            //             ],
+            //           ),
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
             const SizedBox(height: 32),
 
             // Footer
