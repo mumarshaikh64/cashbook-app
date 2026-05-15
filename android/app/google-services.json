@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "781643880585-8qf1kub8jup344ohira1bm4nt9nnvnck.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.softgrid.nayakhata",
+            "certificate_hash": "a930dfb0ed4e7e35f17c5eae0e594d75a98c7e39"
+          }
+        },
+        {
+          "client_id": "781643880585-hj26psvojq7940h9db0lg8a3qc6thmif.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.softgrid.nayakhata",
+            "certificate_hash": "e18df5d6cbcd475ec29884875c86b392f0d867b0"
+          }
+        },
+        {
           "client_id": "781643880585-6jfj59pk0cridl7655vqe8hfvlra39hs.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -390,6 +390,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 16),
+
+          // ─── Account & Data Deletion (Google Policy) ───
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: FadeInUp(
+              delay: const Duration(milliseconds: 100),
+              child: TextButton.icon(
+                onPressed: () => _handleDeleteAccount(context),
+                icon: const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 20),
+                label: const Text(
+                  'Delete Account & Local Data',
+                  style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  backgroundColor: Colors.red.withOpacity(0.05),
+                ),
+              ),
+            ),
+          ),
           const SizedBox(height: 40),
         ],
       ),
@@ -486,6 +508,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => AuthScreen()), (route) => false);
+    }
+  }
+
+  void _handleDeleteAccount(BuildContext context) async {
+    final confirmed = await CustomModals.showPremiumDialog<bool>(
+      context: context,
+      title: 'Delete Account & Data?',
+      icon: Icons.warning_amber_rounded,
+      iconColor: Colors.red,
+      content: const Text(
+        'Deleting your account will permanently erase all associated cashbook credentials, synced references, and profile identities from this device.\n\nThis action is irreversible and complies strictly with Google Play Data Deletion parameters.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text('CANCEL', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold)),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
+          child: const Text('DELETE PERMANENTLY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+        ),
+      ],
+    );
+
+    if (confirmed == true) {
+      // Disconnect Google Drive scope bindings
+      await _googleDriveService.signOut();
+      if (!mounted) return;
+      
+      // Clear persistent key-value profiles and reset state buffers
+      await context.read<AppProvider>().logout();
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account and secure cached parameters purged successfully.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => AuthScreen()),
+        (route) => false,
+      );
     }
   }
 
