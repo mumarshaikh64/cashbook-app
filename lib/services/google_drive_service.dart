@@ -16,6 +16,7 @@ class GoogleDriveService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: <String>[drive.DriveApi.driveFileScope],
+    serverClientId: '781643880585-6jfj59pk0cridl7655vqe8hfvlra39hs.apps.googleusercontent.com',
   );
 
   GoogleSignInAccount? get currentGoogleUser => _googleSignIn.currentUser;
