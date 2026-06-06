@@ -58,6 +58,12 @@ class GoogleDriveService {
       return user;
     } catch (e) {
       print('Google Sign-In Error: $e');
+      
+      // Provide a clearer message for Error 10 which is common for Play Store releases
+      if (e.toString().contains('10')) {
+        throw Exception('Google Sign-In Error (10): This usually means the SHA-1 fingerprint from Google Play Console is missing in Firebase. Please check the App Integrity section in Play Console.');
+      }
+      
       // Rethrow to allow UI to display the exact permission or network error
       rethrow;
     }
